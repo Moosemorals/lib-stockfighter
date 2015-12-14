@@ -25,13 +25,7 @@ package com.moosemorals.stockfighter;
 
 import com.moosemorals.stockfighter.types.Order;
 import com.moosemorals.stockfighter.types.Receipt;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -67,40 +61,16 @@ public class Trader {
 
         HttpURLConnection conn = (HttpURLConnection) target.openConnection();
 
-        conn.setDoOutput(true);
-        conn.setDoInput(true);
-        conn.setInstanceFollowRedirects(true);
         conn.setRequestMethod("POST");
         conn.setRequestProperty("X-Starfighter-Authorization", api_key);
-        try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream(), "UTF-8"))) {
-            if (!log.isDebugEnabled()) {
-                JsonGenerator gen = Json.createGenerator(out);
-                order.toJson(gen);
-            } else {
-                StringWriter buff = new StringWriter();
-                try (JsonGenerator gen = Json.createGenerator(buff)) {
-                    order.toJson(gen);
-                }
-                log.debug("Sending order {}", buff.toString());
-                out.write(buff.toString());
-            }
-            out.flush();
+        conn.setDoOutput(true);
+
+        try (JsonGenerator gen = Json.createGenerator(conn.getOutputStream())) {
+            order.toJson(gen);
         }
 
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"))) {
-            StringBuilder temp = new StringBuilder();
-            char[] buff = new char[4096];
-            int read;
-            while ((read = in.read(buff, 0, buff.length)) > 0) {
-                temp.append(buff, 0, read);
-            }
-            log.debug("Result {}", temp.toString());
-
-            try (JsonParser parser = Json.createParser(new StringReader(temp.toString()))) {
-                Receipt receipt = new Receipt(parser);
-                log.debug("Trade completed: {}", receipt);
-                return receipt;
-            }
+        try (JsonParser parser = Json.createParser(conn.getInputStream())) {
+            return new Receipt(parser);
         }
     }
 
@@ -123,21 +93,9 @@ public class Trader {
         conn.setRequestProperty("X-Starfighter-Authorization", api_key);
 
         conn.connect();
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"))) {
-            StringBuilder temp = new StringBuilder();
-            char[] buff = new char[4096];
-            int read;
-            while ((read = in.read(buff, 0, buff.length)) > 0) {
-                temp.append(buff, 0, read);
-            }
-            log.debug("Result {}", temp.toString());
 
-            try (JsonParser parser = Json.createParser(new StringReader(temp.toString()))) {
-                Receipt receipt = new Receipt(parser);
-                log.debug("Trade completed: {}", receipt);
-                return receipt;
-            }
+        try (JsonParser parser = Json.createParser(conn.getInputStream())) {
+            return new Receipt(parser);
         }
-
     }
 }

@@ -23,9 +23,6 @@
  */
 package com.moosemorals.stockfighter.types;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import javax.json.stream.JsonParser;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -37,35 +34,26 @@ import org.slf4j.LoggerFactory;
  *
  * @author Osric Wilkinson <osric@fluffypeople.com>
  */
-public class Receipt {
+public class Execution {
 
-    private final Logger log = LoggerFactory.getLogger(Receipt.class);
     private static final DateTimeFormatter dateParser = ISODateTimeFormat.dateTimeParser().withZoneUTC();
+    private final Logger log = LoggerFactory.getLogger(Execution.class);
 
     private boolean ok;
     private String errorStr;
-    private String symbol;
-    private String venue;
     private String account;
-    private boolean buy;
-    private int originalQuantity;
-    private int remainingQuantity;
+    private String venue;
+    private String symbol;
+    private Receipt order;
+    private int standingId;
+    private int incomingId;
     private int price;
-    private Order.OrderType type;
-    private int id;
-    private DateTime ts;
-    private int totalFilled;
-    private boolean open;
-    private final Fill[] fills;
+    private int filled;
+    private DateTime filledAt;
+    private boolean standingComplete;
+    private boolean incommingComplete;
 
-    public Receipt(JsonParser parser) {
-        List<Fill> f = doParse(parser);
-        fills = new Fill[f.size()];
-        f.toArray(fills);
-    }
-
-    private List<Fill> doParse(JsonParser parser) {
-        List<Fill> f = new ArrayList();
+    public Execution(JsonParser parser) {
         while (parser.hasNext()) {
             switch (parser.next()) {
                 case KEY_NAME:
@@ -88,52 +76,44 @@ public class Receipt {
                         case "account":
                             account = parser.getString();
                             break;
-                        case "direction":
-                            buy = parser.getString().equals("buy");
+                        case "order":
+                            order = new Receipt(parser);
                             break;
-                        case "originalQty":
-                            originalQuantity = parser.getInt();
+                        case "standingId":
+                            standingId = parser.getInt();
                             break;
-                        case "qty":
-                            remainingQuantity = parser.getInt();
+                        case "incomingId":
+                            incomingId = parser.getInt();
                             break;
                         case "price":
                             price = parser.getInt();
                             break;
-                        case "type":
-                            type = Order.OrderType.fromString(parser.getString());
+                        case "filled":
+                            filled = parser.getInt();
                             break;
-                        case "id":
-                            id = parser.getInt();
+                        case "filledAt":
+                            filledAt = dateParser.parseDateTime(parser.getString());
                             break;
-                        case "ts":
-                            ts = dateParser.parseDateTime(parser.getString());
+                        case "standingComplete":
+                            standingComplete = next == JsonParser.Event.VALUE_TRUE;
                             break;
-                        case "fills":
-                            next = parser.next();
-                            while (next != JsonParser.Event.END_ARRAY) {
-                                f.add(new Fill(parser));
-                                next = parser.next();
-                            }
+                        case "incomingComplete":
+                            incommingComplete = next == JsonParser.Event.VALUE_TRUE;
                             break;
-                        case "totalFilled":
-                            totalFilled = parser.getInt();
-                            break;
-                        case "open":
-                            open = next == JsonParser.Event.VALUE_TRUE;
+                        default:
+                            log.warn("Unexpeted key in execution tick: [{}]", key);
                             break;
                     }
                     break;
                 case END_OBJECT:
-                    return f;
-
+                    return;
             }
         }
-        return f;
     }
 
-    public Logger getLog() {
-        return log;
+    @Override
+    public String toString() {
+        return "Execution{" + "ok=" + ok + ", errorStr=" + errorStr + ", account=" + account + ", venue=" + venue + ", symbol=" + symbol + ", order=" + order + ", standingId=" + standingId + ", incomingId=" + incomingId + ", price=" + price + ", filled=" + filled + ", filledAt=" + filledAt + ", standingComplete=" + standingComplete + ", incommingComplete=" + incommingComplete + '}';
     }
 
     public boolean isOk() {
@@ -144,61 +124,48 @@ public class Receipt {
         return errorStr;
     }
 
-    public String getSymbol() {
-        return symbol;
+    public String getAccount() {
+        return account;
     }
 
     public String getVenue() {
         return venue;
     }
 
-    public String getAccount() {
-        return account;
+    public String getSymbol() {
+        return symbol;
     }
 
-    public boolean isBuy() {
-        return buy;
+    public Receipt getOrder() {
+        return order;
     }
 
-    public int getOriginalQuantity() {
-        return originalQuantity;
+    public int getStandingId() {
+        return standingId;
     }
 
-    public int getRemainingQuantity() {
-        return remainingQuantity;
+    public int getIncomingId() {
+        return incomingId;
     }
 
     public int getPrice() {
         return price;
     }
 
-    public Order.OrderType getType() {
-        return type;
+    public int getFilled() {
+        return filled;
     }
 
-    public int getId() {
-        return id;
+    public DateTime getFilledAt() {
+        return filledAt;
     }
 
-    public DateTime getTs() {
-        return ts;
+    public boolean isStandingComplete() {
+        return standingComplete;
     }
 
-    public int getTotalFilled() {
-        return totalFilled;
-    }
-
-    public boolean isOpen() {
-        return open;
-    }
-
-    public Fill[] getFills() {
-        return fills;
-    }
-
-    @Override
-    public String toString() {
-        return "Receipt{" + "log=" + log + ", ok=" + ok + ", errorStr=" + errorStr + ", symbol=" + symbol + ", venue=" + venue + ", account=" + account + ", buy=" + buy + ", originalQuantity=" + originalQuantity + ", remainingQuantity=" + remainingQuantity + ", price=" + price + ", type=" + type + ", id=" + id + ", ts=" + ts + ", totalFilled=" + totalFilled + ", open=" + open + ", fills=" + Arrays.toString(fills) + '}';
+    public boolean isIncommingComplete() {
+        return incommingComplete;
     }
 
 }

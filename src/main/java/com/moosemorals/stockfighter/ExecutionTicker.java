@@ -5,8 +5,9 @@
  */
 package com.moosemorals.stockfighter;
 
-import com.moosemorals.stockfighter.types.Quote;
+import com.moosemorals.stockfighter.types.Execution;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -15,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.json.Json;
+import javax.json.stream.JsonParser;
 import javax.websocket.ClientEndpoint;
 import javax.websocket.ClientEndpointConfig;
 import javax.websocket.CloseReason;
@@ -62,10 +65,10 @@ public class ExecutionTicker {
         }
     }
 
-    private void notifyListeners(Quote message) {
+    private void notifyListeners(Execution message) {
         synchronized (listeners) {
             for (Listener l : listeners) {
-                l.onQuote(message);
+                l.onExecute(message);
             }
         }
     }
@@ -94,7 +97,11 @@ public class ExecutionTicker {
 
                             @Override
                             public void onMessage(String message) {
-                                log.debug("Execution: {}", message);
+                                try (JsonParser parser = Json.createParser(new StringReader(message))) {
+
+                                    notifyListeners(new Execution(parser));
+
+                                }
                             }
                         });
                     }
@@ -128,6 +135,6 @@ public class ExecutionTicker {
 
     public interface Listener {
 
-        void onQuote(Quote q);
+        void onExecute(Execution ex);
     }
 }

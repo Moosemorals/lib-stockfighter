@@ -5,6 +5,7 @@
  */
 package com.moosemorals.stockfighter;
 
+import com.moosemorals.stockfighter.types.Execution;
 import com.moosemorals.stockfighter.types.Order;
 import com.moosemorals.stockfighter.types.Receipt;
 import java.io.BufferedReader;
@@ -30,6 +31,14 @@ public class Main {
         String apiKey = loadApiKey();
         //   QuoteTicker qt = new QuoteTicker(apiKey);
         ExecutionTicker et = new ExecutionTicker(apiKey);
+
+        et.addListener(new ExecutionTicker.Listener() {
+            @Override
+            public void onExecute(Execution ex) {
+                log.debug("Execution : {}", ex);
+            }
+        });
+
         et.connect(ACCOUNT, VENUE);
 
         Thread.sleep(2000);
