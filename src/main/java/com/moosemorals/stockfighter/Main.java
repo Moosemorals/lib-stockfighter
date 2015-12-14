@@ -5,21 +5,11 @@
  */
 package com.moosemorals.stockfighter;
 
-import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import javax.websocket.ClientEndpointConfig;
-import javax.websocket.ClientEndpointConfig.Builder;
-import javax.websocket.CloseReason;
-import javax.websocket.Endpoint;
-import javax.websocket.EndpointConfig;
-import javax.websocket.MessageHandler;
-import javax.websocket.Session;
-import org.glassfish.tyrus.client.ClientManager;
-import org.glassfish.tyrus.client.ClientProperties;
+import com.moosemorals.stockfighter.types.Order;
+import com.moosemorals.stockfighter.types.Receipt;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,53 +20,85 @@ import org.slf4j.LoggerFactory;
 public class Main {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
-    private static final String API_KEY = "52c2462b3610f6e8fcc281d8a15730a95d50acdd";
-    private static final String base_url = "ws://api.stockfighter.io/ob/api";
 
-    public static void main(String[] args) {
+    private static final String ACCOUNT = "EXB123456";
+    private static final String VENUE = "TESTEX";
+    private static final String SYMBOL = "FOOBAR";
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+
+        String apiKey = loadApiKey();
+        //   QuoteTicker qt = new QuoteTicker(apiKey);
+        ExecutionTicker et = new ExecutionTicker(apiKey);
+        et.connect(ACCOUNT, VENUE);
+
+        Thread.sleep(2000);
+
+        final Trader t = new Trader(apiKey);
+
+        Order o = new Order();
+        o.setPrice(1);
+        o.setQuantity(4);
+        o.setBuy(false);
+        o.setAccount(ACCOUNT);
+        o.setVenue(VENUE);
+        o.setType(Order.OrderType.Market);
+        o.setSymbol(SYMBOL);
+
         try {
-            final CountDownLatch messageLatch = new CountDownLatch(1);
+            Receipt postOrder = t.postOrder(o);
+            log.debug("Posted an order: {}", postOrder);
+            Receipt cancelOrder = t.cancelOrder(VENUE, SYMBOL, postOrder.getId());
+            log.debug("And then canceled it: {}", cancelOrder);
 
-            final Builder configBuilder = ClientEndpointConfig.Builder.create();
-            configBuilder.configurator(new ClientEndpointConfig.Configurator() {
-                @Override
-                public void beforeRequest(Map<String, List<String>> headers) {
-                    headers.put("X-Starfighter-Authorization", Arrays.asList(API_KEY));
-                }
-
-            });
-
-            ClientManager client = ClientManager.createClient();
-            client.getProperties().put(ClientProperties.REDIRECT_ENABLED, true);
-
-            try (Session ws = client.connectToServer(new Endpoint() {
-                @Override
-                public void onOpen(Session session, EndpointConfig ec) {
-                    log.debug("Websocket open: {}", session.getRequestURI());
-                    session.addMessageHandler(new MessageHandler.Whole<String>() {
-                        @Override
-                        public void onMessage(String message) {
-                            log.debug("Received message: {}", message);
-                        }
-                    });
-                }
-
-                @Override
-                public void onError(Session session, Throwable thr) {
-                    log.debug("Websocket error: {}, {}", session, thr.getMessage(), thr);
-                }
-
-                @Override
-                public void onClose(Session session, CloseReason closeReason) {
-                    log.debug("Websocket close: {}, {}", session, closeReason);
-                }
-
-            }, configBuilder.build(), new URI(base_url + "/ws/TMB96530732/venues/ZXNEX/tickertape"))) {
-                messageLatch.await(100, TimeUnit.SECONDS);
-            }
-        } catch (Exception ex) {
-            log.error("Problem: {}", ex.getMessage(), ex);
+        } catch (IOException ex) {
+            log.debug("Can't post trade: {}", ex.getMessage(), ex);
         }
+
+        /*
+        qt.addListener(new QuoteTicker.Listener() {
+            DateTime lastTrade = new DateTime(0);
+
+            @Override
+            public void onQuote(Quote q) {
+
+                System.out.print(".");
+                System.out.flush();
+
+                if (q.getLastTrade().isAfter(lastTrade)) {
+                    log.info("Someone traded at {}", q.getLast());
+                    lastTrade = q.getLastTrade();
+                }
+
+                Order o = new Order();
+                o.setPrice(q.getLast() - 1);
+                o.setQuantity(4);
+                o.setBuy(true);
+                o.setAccount(ACCOUNT);
+                o.setVenue(VENUE);
+                o.setType(Order.OrderType.FOK);
+                o.setSymbol(SYMBOL);
+
+                try {
+                    Receipt postOrder = t.postOrder(o);
+
+                    log.debug("Posted an order: {}", postOrder);
+
+                } catch (IOException ex) {
+                    log.debug("Can't post trade: {}", ex.getMessage(), ex);
+                }
+
+            }
+        });
+         */
+        //    qt.connect(ACCOUNT, VENUE);
+        System.in.read();
+        //    qt.disconnect();
+        //    et.disconnect();
     }
 
+    private static String loadApiKey() throws IOException {
+        BufferedReader in = new BufferedReader(new InputStreamReader(Main.class.getResourceAsStream("/apiKey")));
+        return in.readLine();
+    }
 }
