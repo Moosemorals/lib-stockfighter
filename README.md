@@ -12,6 +12,13 @@ This is a (currently, very basic) Java wrapper around the [REST API](https://sta
 
 # Example use
 
+First, fetch and install
+
+    git clone https://github.com/Moosemorals/lib-stockfighter.git
+    cd lib-stockfighter
+    mvn install
+
+
 ## Simple
 
 The api has a bunch of GET/POST/DELETE commands to get the status of the API,
