@@ -73,7 +73,7 @@ public class QuoteTicker {
         }
     }
 
-    public void connect(String traderId, String exchangeId) throws IOException {
+    public void connect(String account, String venue) throws IOException {
 
         final ClientEndpointConfig.Builder configBuilder = ClientEndpointConfig.Builder.create();
         configBuilder.configurator(new ClientEndpointConfig.Configurator() {
@@ -115,7 +115,7 @@ public class QuoteTicker {
                         log.debug("Websocket close: {}, {}", session.getRequestURI(), closeReason.getReasonPhrase());
                     }
 
-                }, configBuilder.build(), new URI(base_url + "/ws/" + traderId + "/venues/" + exchangeId + "/tickertape"));
+                }, configBuilder.build(), new URI(base_url + "/ws/" + account + "/venues/" + venue + "/tickertape"));
             } catch (DeploymentException | URISyntaxException ex) {
                 log.error("Websocket problem: {}", ex.getMessage(), ex);
                 connected.set(false);

@@ -44,7 +44,7 @@ public class Execution {
     private String account;
     private String venue;
     private String symbol;
-    private Receipt order;
+    private OrderStatus order;
     private int standingId;
     private int incomingId;
     private int price;
@@ -77,7 +77,7 @@ public class Execution {
                             account = parser.getString();
                             break;
                         case "order":
-                            order = new Receipt(parser);
+                            order = new OrderStatus(parser);
                             break;
                         case "standingId":
                             standingId = parser.getInt();
@@ -136,7 +136,7 @@ public class Execution {
         return symbol;
     }
 
-    public Receipt getOrder() {
+    public OrderStatus getOrder() {
         return order;
     }
 

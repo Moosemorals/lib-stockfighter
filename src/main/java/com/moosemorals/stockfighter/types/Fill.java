@@ -50,7 +50,7 @@ public class Fill {
             switch (next) {
                 case KEY_NAME:
                     String key = parser.getString();
-                    next = parser.next();
+                    parser.next();
                     switch (key) {
                         case "price":
                             price = parser.getInt();
@@ -66,7 +66,6 @@ public class Fill {
                             break;
                     }
                     break;
-                case END_ARRAY:
                 case END_OBJECT:
                     return;
             }

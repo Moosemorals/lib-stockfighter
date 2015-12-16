@@ -34,12 +34,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * What you get as the result of posting a trade.
  *
  * @author Osric Wilkinson <osric@fluffypeople.com>
  */
-public class Receipt {
+public class OrderStatus {
 
-    private final Logger log = LoggerFactory.getLogger(Receipt.class);
+    private final Logger log = LoggerFactory.getLogger(OrderStatus.class);
     private static final DateTimeFormatter dateParser = ISODateTimeFormat.dateTimeParser().withZoneUTC();
 
     private boolean ok;
@@ -58,7 +59,7 @@ public class Receipt {
     private boolean open;
     private final Fill[] fills;
 
-    public Receipt(JsonParser parser) {
+    public OrderStatus(JsonParser parser) {
         List<Fill> f = doParse(parser);
         fills = new Fill[f.size()];
         f.toArray(fills);
@@ -132,10 +133,6 @@ public class Receipt {
         return f;
     }
 
-    public Logger getLog() {
-        return log;
-    }
-
     public boolean isOk() {
         return ok;
     }
@@ -198,7 +195,7 @@ public class Receipt {
 
     @Override
     public String toString() {
-        return "Receipt{" + "log=" + log + ", ok=" + ok + ", errorStr=" + errorStr + ", symbol=" + symbol + ", venue=" + venue + ", account=" + account + ", buy=" + buy + ", originalQuantity=" + originalQuantity + ", remainingQuantity=" + remainingQuantity + ", price=" + price + ", type=" + type + ", id=" + id + ", ts=" + ts + ", totalFilled=" + totalFilled + ", open=" + open + ", fills=" + Arrays.toString(fills) + '}';
+        return "OrderStatus{" + ", ok=" + ok + ", errorStr=" + errorStr + ", symbol=" + symbol + ", venue=" + venue + ", account=" + account + ", buy=" + buy + ", originalQuantity=" + originalQuantity + ", remainingQuantity=" + remainingQuantity + ", price=" + price + ", type=" + type + ", id=" + id + ", ts=" + ts + ", totalFilled=" + totalFilled + ", open=" + open + ", fills=" + Arrays.toString(fills) + '}';
     }
 
 }
