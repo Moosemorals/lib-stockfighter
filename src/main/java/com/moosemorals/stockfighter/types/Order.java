@@ -142,4 +142,9 @@ public class Order {
         this.type = type;
     }
 
+    @Override
+    public String toString() {
+        return "Order{" + "account=" + account + ", venue=" + venue + ", symbol=" + symbol + ", price=" + price + ", quantity=" + quantity + ", buy=" + buy + ", type=" + type + '}';
+    }
+
 }
