@@ -84,7 +84,11 @@ public class Orderbook {
                             List<Entry> askList = new ArrayList<>();
                             while (next != JsonParser.Event.END_ARRAY) {
                                 askList.add(new Entry(parser));
-                                next = parser.next();
+                                if (parser.hasNext()) {
+                                    next = parser.next();
+                                } else {
+                                    return;
+                                }
                             }
                             asks = new Entry[askList.size()];
                             askList.toArray(asks);
